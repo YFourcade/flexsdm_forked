@@ -185,6 +185,7 @@ fit_raf <- function(data,
             data = train[[i]],
             mtry = mtry,
             ntree = 500,
+            sampsize = rep(nrow(train[[i]][train[[i]]$response == 1,]),2),
             importance = FALSE,
           )
 
