@@ -186,6 +186,7 @@ fit_raf <- function(data,
             mtry = mtry,
             ntree = 500,
             importance = FALSE,
+            sampsize = rep(nrow(train[[i]][train[[i]][, response] == 1,]),2)
           )
 
         pred_test <- data.frame(
@@ -247,6 +248,7 @@ fit_raf <- function(data,
       mtry = mtry,
       ntree = 500,
       importance = FALSE,
+      sampsize = rep(nrow(data[data[, response] == 1,]),2)
     ))
 
   pred_test <- data.frame(
