@@ -195,9 +195,9 @@ sdm_eval <- function(p, a, bg = NULL, thr = NULL) {
   performance <- performance %>% dplyr::mutate(AUC = R / (as.numeric(na) * as.numeric(np)))
 
   if (is.null(bg)) {
-    performance <- performance %>% dplyr::mutate(BOYCE = ecospat::ecospat.boyce(pres = p, contrast = c(p, a)))
+    performance <- performance %>% dplyr::mutate(BOYCE = ecospat::ecospat.boyce(obs = p, fit = c(p, a))$cor)
   } else {
-    performance <- performance %>% dplyr::mutate(BOYCE = becospat::ecospat.boyce(pres = p, contrast = c(p, bg)))
+    performance <- performance %>% dplyr::mutate(BOYCE = becospat::ecospat.boyce(obs = p, fit = c(p, bg))$cor)
   }
 
   real <- c(rep(1, length(p)), rep(0, length(a)))
