@@ -156,33 +156,33 @@ boyce <- function(pres,
   mean_pred <- rowMeans(cbind(lows, highs))
 
   # add small number to each bin that has 0 background frequency but does have a presence frequency > 0
-  if (any(freq_pres > 0 & freq_contrast == 0)) {
-    small_value <- 0.5
-    freq_contrast[freq_pres > 0 & freq_contrast == 0] <- small_value
-  }
-
-  # remove classes with 0 presence frequency
-  if (any(freq_pres == 0)) {
-    zeros <- which(freq_pres == 0)
-    mean_pred[zeros] <- NA
-    freq_pres[zeros] <- NA
-    freq_contrast[zeros] <- NA
-  }
-
-  # remove classes with 0 background frequency
-  if (any(0 %in% freq_contrast)) {
-    zeros <- which(freq_pres == 0)
-    mean_pred[zeros] <- NA
-    freq_pres[zeros] <- NA
-    freq_contrast[zeros] <- NA
-  }
+  # if (any(freq_pres > 0 & freq_contrast == 0)) {
+  #   small_value <- 0.5
+  #   freq_contrast[freq_pres > 0 & freq_contrast == 0] <- small_value
+  # }
+  #
+  # # remove classes with 0 presence frequency
+  # if (any(freq_pres == 0)) {
+  #   zeros <- which(freq_pres == 0)
+  #   mean_pred[zeros] <- NA
+  #   freq_pres[zeros] <- NA
+  #   freq_contrast[zeros] <- NA
+  # }
+  #
+  # # remove classes with 0 background frequency
+  # if (any(0 %in% freq_contrast)) {
+  #   zeros <- which(freq_pres == 0)
+  #   mean_pred[zeros] <- NA
+  #   freq_pres[zeros] <- NA
+  #   freq_contrast[zeros] <- NA
+  # }
 
   P <- freq_pres / length(pres)
   E <- freq_contrast / length(contrast)
   PE <- P / E
 
   # remove NAs
-  rm_nas <- stats::complete.cases(data.frame(mean_pred, PE))
+  # rm_nas <- stats::complete.cases(data.frame(mean_pred, PE))
   # mean_pred <- mean_pred[rm_nas]
   # PE <- PE[rm_nas]
 
