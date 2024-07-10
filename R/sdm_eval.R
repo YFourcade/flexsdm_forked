@@ -50,9 +50,8 @@
 #'   | BOYCE  (continuous Boyce index)*                  | no | -1 - 1 |
 #'   | IMAE (Inverse Mean Absolute Error)**              | no | 0 - 1 |
 #'
-#' \* BOYCE is calculated based on presences and background points, in case that background points
-#' is not provided it is calculated using presences and absences. The codes for calculating
-#' this metric is and adaptation of enmSdm package (https://github.com/adamlilith/enmSdm)
+#' \* BOYCE is calculated based on presences and background points, using the ecospat.boyce function
+#' in the ecospat package
 #'
 #' \** IMAE is calculated as 1-(Mean Absolute Error) in order to be consistent with the other
 #' metrics where the higher the value of a given performance metric, the greater the model's
@@ -74,6 +73,7 @@
 #'
 #' @importFrom dplyr %>% tibble mutate filter pull bind_cols left_join all_of
 #' @importFrom stats quantile
+#' @importFrom ecospat ecospat.boyce
 #'
 #' @examples
 #' \dontrun{
@@ -195,9 +195,9 @@ sdm_eval <- function(p, a, bg = NULL, thr = NULL) {
   performance <- performance %>% dplyr::mutate(AUC = R / (as.numeric(na) * as.numeric(np)))
 
   if (is.null(bg)) {
-    performance <- performance %>% dplyr::mutate(BOYCE = boyce(pres = p, contrast = c(p, a)))
+    performance <- performance %>% dplyr::mutate(BOYCE = ecospat::ecospat.boyce(obs = p, fit = c(p, a)))
   } else {
-    performance <- performance %>% dplyr::mutate(BOYCE = boyce(pres = p, contrast = c(p, bg)))
+    performance <- performance %>% dplyr::mutate(BOYCE = ecospat::ecospat.boyce(obs = p, fit = c(p, bg)))
   }
 
   real <- c(rep(1, length(p)), rep(0, length(a)))
