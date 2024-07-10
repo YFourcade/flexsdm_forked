@@ -195,15 +195,25 @@ sdm_eval <- function(p, a, bg = NULL, thr = NULL) {
   performance <- performance %>% dplyr::mutate(AUC = R / (as.numeric(na) * as.numeric(np)))
 
   if (is.null(bg)) {
-    performance <- performance %>%
-      dplyr::mutate(BOYCE = ecospat::ecospat.boyce(
-        obs = p, fit = c(p, a), method = 'pearson', PEplot = F
-      )$cor)
+    if(length(unique(c(p, a))) > 1){
+      performance <- performance %>%
+        dplyr::mutate(BOYCE = ecospat::ecospat.boyce(
+          obs = p, fit = c(p, a), PEplot = F
+        )$cor)
+    } else {
+      performance <- performance %>%
+        dplyr::mutate(BOYCE = NA)
+    }
   } else {
-    performance <- performance %>%
-      dplyr::mutate(BOYCE = ecospat::ecospat.boyce(
-        obs = p, fit = c(p, bg), method = 'pearson', PEplot = F
-      )$cor)
+    if(length(unique(c(p, a))) > 1){
+      performance <- performance %>%
+        dplyr::mutate(BOYCE = ecospat::ecospat.boyce(
+          obs = p, fit = c(p, bg), PEplot = F
+        )$cor)
+    } else {
+      performance <- performance %>%
+        dplyr::mutate(BOYCE = NA)
+    }
   }
 
   real <- c(rep(1, length(p)), rep(0, length(a)))
