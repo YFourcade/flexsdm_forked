@@ -143,7 +143,7 @@ sdm_eval <- function(p, a, bg = NULL, thr = NULL) {
   }
 
   if (any(thr %in% "sensitivity") &&
-    !any(names(thr) %in% "sens")) {
+      !any(names(thr) %in% "sens")) {
     thr <- c(thr, sens = 0.9)
   }
 
@@ -195,9 +195,15 @@ sdm_eval <- function(p, a, bg = NULL, thr = NULL) {
   performance <- performance %>% dplyr::mutate(AUC = R / (as.numeric(na) * as.numeric(np)))
 
   if (is.null(bg)) {
-    performance <- performance %>% dplyr::mutate(BOYCE = ecospat::ecospat.boyce(obs = p, fit = c(p, a)))
+    performance <- performance %>%
+      dplyr::mutate(BOYCE = ecospat::ecospat.boyce(
+        obs = p, fit = c(p, a), method = 'pearson', PEplot = F
+      )$cor)
   } else {
-    performance <- performance %>% dplyr::mutate(BOYCE = ecospat::ecospat.boyce(obs = p, fit = c(p, bg)))
+    performance <- performance %>%
+      dplyr::mutate(BOYCE = ecospat::ecospat.boyce(
+        obs = p, fit = c(p, bg), method = 'pearson', PEplot = F
+      )$cor)
   }
 
   real <- c(rep(1, length(p)), rep(0, length(a)))
