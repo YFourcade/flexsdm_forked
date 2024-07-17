@@ -205,7 +205,7 @@ sdm_eval <- function(p, a, bg = NULL, thr = NULL) {
         dplyr::mutate(BOYCE = NA)
     }
   } else {
-    if(length(unique(c(p, a))) > 1){
+    if(length(unique(c(p, bg))) > 1){
       performance <- performance %>%
         dplyr::mutate(BOYCE = ecospat::ecospat.boyce(
           obs = p, fit = c(p, bg), PEplot = F
