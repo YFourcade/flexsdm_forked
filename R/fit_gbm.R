@@ -236,7 +236,7 @@ fit_gbm <- function(data,
     dplyr::group_by(model, threshold) %>%
     dplyr::summarise(dplyr::across(
       TPR:IMAE,
-      list(mean = mean, sd = stats::sd)
+      list(mean = function(x)mean(x, na.rm = T), sd = stats::sd)
     ), .groups = "drop")
 
   # Bind data for ensemble
@@ -251,13 +251,13 @@ fit_gbm <- function(data,
   # Fit final models with best settings
   set.seed(1)
   suppressMessages(mod <-
-    gbm::gbm(formula1,
-      data = data,
-      distribution = "bernoulli",
-      n.trees = n_trees,
-      n.minobsinnode = n_minobsinnode,
-      shrinkage = shrinkage
-    ))
+                     gbm::gbm(formula1,
+                              data = data,
+                              distribution = "bernoulli",
+                              n.trees = n_trees,
+                              n.minobsinnode = n_minobsinnode,
+                              shrinkage = shrinkage
+                     ))
 
   pred_test <- data.frame(
     pr_ab = data.frame(data)[,response],

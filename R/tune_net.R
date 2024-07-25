@@ -266,8 +266,8 @@ tune_net <-
 
         eval <-
           dplyr::tibble(dplyr::left_join(dplyr::mutate(grid2, tnames),
-            eval,
-            by = "tnames"
+                                         eval,
+                                         by = "tnames"
           )) %>%
           dplyr::select(-tnames)
         eval
@@ -289,7 +289,7 @@ tune_net <-
       dplyr::group_by_at(c(hyperp, "model", "threshold")) %>%
       dplyr::summarise(dplyr::across(
         TPR:IMAE,
-        list(mean = mean, sd = sd)
+        list(mean = function(x)mean(x, na.rm = T), sd = stats::sd)
       ), .groups = "drop")
 
     # Find the bets parameter setting
