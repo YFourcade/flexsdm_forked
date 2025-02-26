@@ -20,11 +20,11 @@
 #'   Usage thr = c('sensitivity', sens='0.6') or thr = c('sensitivity'). 'sens' refers to sensitivity value. If a sensitivity value is not specified, the default value is 0.9.
 #'   }
 #' If the user wants to include more than one threshold type, it is necessary to concatenate threshold types, e.g., thr=c('max_sens_spec', 'max_jaccard'), or thr=c('max_sens_spec', 'sensitivity', sens='0.8'), or thr=c('max_sens_spec', 'sensitivity'). Function will use all thresholds if no threshold is specified
-#' @param poly interger >= 2. If used with values >= 2 model will use polynomials
+#' @param poly integer >= 2. If used with values >= 2 model will use polynomials
 #' for those continuous variables (i.e. used in predictors argument). Default is 0. Because ESM are
 #' constructed with few occurrences it is recommended no to use polynomials to avoid overfitting.
 #'
-#' @param inter_order interger >= 0. The interaction order between explanatory variables.
+#' @param inter_order integer >= 0. The interaction order between explanatory variables.
 #' Default is 0. Because ESM are constructed with few occurrences it is recommended not to use interaction terms.
 #'
 #' @details This method consists of creating bivariate models with all the pair-wise combinations
@@ -181,18 +181,18 @@ esm_glm <- function(data,
       as.double())
   })
 
-  if(length(data_ens) > 1){
+  if (length(data_ens) > 1) {
     data_ens2 <-
       dplyr::inner_join(data_ens[[1]],
-                        data_ens[[2]],
-                        by = c("rnames", "replicates", "part", "pr_ab")
+        data_ens[[2]],
+        by = c("rnames", "replicates", "part", "pr_ab")
       )
     if (length(data_ens) > 2) {
       for (i in 3:length(data_ens)) {
         data_ens2 <-
           dplyr::inner_join(data_ens2,
-                            data_ens[[i]],
-                            by = c("rnames", "replicates", "part", "pr_ab")
+            data_ens[[i]],
+            by = c("rnames", "replicates", "part", "pr_ab")
           )
       }
     }

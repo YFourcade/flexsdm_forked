@@ -41,8 +41,8 @@
 #'
 #'
 #' plot(clusters)
-#' points(single_spp[-1], col="red")
-#' crs(clusters, proj=TRUE) # coordinate reference system (CRS) used for this points database
+#' points(single_spp[-1], col = "red")
+#' crs(clusters, proj = TRUE) # coordinate reference system (CRS) used for this points database
 #' # note that the unit of this CRS is in m, consequently the buffer width
 #' # will be interpreted in m too
 #'
@@ -125,7 +125,7 @@
 calib_area <- function(data, x, y, method, groups = NULL, crs = NULL) {
   . <- NULL
   if (!method[1] %in% c("buffer", "mcp", "bmcp", "mask")) {
-    stop("argument 'method' was misused, available methods buffer, mcp, bmpc, and mask")
+    stop("argument 'method' was misused, available methods buffer, mcp, bmcp, and mask")
   }
 
   if (method[1] %in% c("bmcp", "buffer")) {

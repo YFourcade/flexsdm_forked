@@ -14,7 +14,7 @@
 #' @param partition character. Column name with training and validation partition groups.
 #' @param grid data.frame. A data frame object with algorithm hyper-parameters values to be tested.
 #' It is recommended to generate this data.frame with the grid() function. Hyper-parameter needed
-#' for tuning is 'mtry'. The maximum mtry cannot exceed the total number of predictors.
+#' for tuning is 'mtry' and 'ntree'. The maximum mtry cannot exceed the total number of predictors.
 #' @param thr character. Threshold used to get binary suitability values (i.e. 0,1), needed for
 #' threshold-dependent performance metrics. It is possible to use more than one threshold type.
 #' It is necessary to provide a vector for this argument. The following threshold types are
@@ -76,8 +76,12 @@
 #'   method = c(method = "kfold", folds = 5)
 #' )
 #'
-#' tune_grid <-
-#'   expand.grid(mtry = seq(1, 7, 1))
+#' tune_grid <- expand.grid(
+#'   mtry = seq(1, 7, 1),
+#'   ntree = c(400, 600, 800)
+#' )
+#'
+#' tune_grid
 #'
 #' rf_t <-
 #'   tune_raf(
@@ -168,17 +172,26 @@ tune_raf <-
     # Prepare grid when grid=default or NULL
     if (is.null(grid)) {
       nv <- length(stats::na.omit(c(predictors, predictors_f)))
-      grid <- expand.grid(mtry = seq(2, nv, 1))
+      grid <- expand.grid(
+        mtry = seq(2, nv, 1),
+        ntree = c(200, 400, 600, 800, 1000, 1200)
+      )
       message("Hyper-parameter values were not provided, default values will be used")
       message(paste("mtry = ", paste(seq(2, paste(
         nv
       ), 1), collapse = ",")))
+      message(paste("ntree = ", paste(c(200, 400, 600, 800, 1000), collapse = ",")))
+    }
+    if (!("ntree" %in% names(grid))) {
+      message("ntree parameter was not provided, following value will be used")
+      message(paste("ntree = ", paste(c(200, 400, 600, 800, 1000), collapse = ",")))
+      grid <- expand.grid(mtry = grid$mtry, ntree = c(200, 400, 600, 800, 1000))
     }
 
     # Test hyper-parameters names
     hyperp <- names(grid)
     if (!all(c("mtry") %in% hyperp)) {
-      stop("Database used in 'grid' argument has to contain this columns for tunning: 'mtry'")
+      stop("Database used in 'grid' argument has to contain this columns for tunning: 'mtry' and/or 'ntree'")
     }
 
     grid$tune <- 1:nrow(grid)
@@ -200,13 +213,13 @@ tune_raf <-
       rm(out)
 
 
-      if(n_cores>np2){
+      if (n_cores > np2) {
         n_cores <- np2
       }
       cl <- parallel::makeCluster(n_cores)
       doParallel::registerDoParallel(cl)
 
-      eval_partial <- foreach::foreach(i = 1:np2, .export=c('sdm_eval', 'boyce'), .packages = c("dplyr")) %dopar%{
+      eval_partial <- foreach::foreach(i = 1:np2, .export = c("sdm_eval", "boyce"), .packages = c("dplyr")) %dopar% {
         # message("Partition number: ", i, "/", np2)
         mod <- as.list(rep(NA, nrow(grid)))
         names(mod) <- 1:nrow(grid)
@@ -218,9 +231,14 @@ tune_raf <-
                 formula1,
                 data = train[[i]],
                 mtry = grid$mtry[ii],
+<<<<<<< HEAD
                 ntree = 500,
                 importance = FALSE,
                 sampsize = rep(nrow(train[[i]][train[[i]][, response] == 1,]),2)
+=======
+                ntree = grid$ntree[ii],
+                importance = FALSE
+>>>>>>> 688587525e33f58f3b057b6cfc15dc39015ccea3
               )
           )
         }
@@ -308,7 +326,7 @@ tune_raf <-
     pred_test_ens <- mod[["data_ens"]]
 
     pred_test <- data.frame(
-      pr_ab = data.frame(data)[,response],
+      pr_ab = data.frame(data)[, response],
       pred = stats::predict(
         mod$model,
         newdata = data,
@@ -326,7 +344,7 @@ tune_raf <-
       model = mod$model,
       predictors = variables,
       performance = dplyr::left_join(best_tune, threshold[1:4], by = "threshold") %>%
-        dplyr::relocate({{hyperp}}, model, threshold, thr_value, n_presences, n_absences),
+        dplyr::relocate({{ hyperp }}, model, threshold, thr_value, n_presences, n_absences),
       hyper_performance = eval_final,
       data_ens = pred_test_ens
     )

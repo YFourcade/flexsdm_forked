@@ -24,12 +24,20 @@
 #' @param maxcell numeric. Number of raster cells to be randomly sampled. Taking a sample could be
 #' useful to reduce memory usage for large rasters. If NULL, the function will use all
 #' raster cells. Default NULL. Usage maxcell = 50000.
+#' @param based_on_points logical. If TRUE, collinearity reduction method will be based on species points data (i.e., presences, and absences, pseudo-absences or background points). If TRUE, data, x and y arguments must be provided. Default FALSE.
+#' @param data tibble or data.frame. Database with species data used to model
+#' (i.e., presence + absence, or presence + pseudo-absence + background points)
+#' with x and y coordinates
+#' @param x character. Column name with spatial x coordinates
+#' @param y character. Column name with spatial y coordinates
 #'
 #' @return
 #' #' If 'pearson', returns a list with the following elements:
 #' \itemize{
 #' \item cor_table: a matrix object with pairwise correlation values of the environmental variables
-#' \item cor_variables: a list object with the same length of the number of environmental values containing the pairwise relations that exceeded the correlation threshold for each one of the environmental variables
+#' \item cor_variables: a list object with the same length of the number of environmental
+#'  values containing the pairwise relations that exceeded the correlation
+#'  threshold for each one of the environmental variables
 #' }
 #'
 #' If 'vif' method, returns a list with the following elements:
@@ -91,6 +99,15 @@
 #'       ├── UKESM_2050_ssp370\cr
 #'       │   └── pcs.tif
 #'
+#' Perform collinearity reduction based on points
+#'
+#' Evaluating collinearity based on all environmental conditions of a
+#' calibration area or study area could yield different results than evaluating
+#' collinearity based on points used to construct the models. If you want to
+#' perform collinearity reduction based on species points data, it is strongly
+#' recommended to use all the point data used for modeling
+#' (i.e., presence + absence or presence + pseudo-absence/background points).
+#'
 #' @export
 #' @importFrom dplyr tibble
 #' @importFrom stats na.omit cor lm prcomp factanal
@@ -129,19 +146,19 @@
 #'
 #'
 #' # Perform pca collinearity control with different projections
-#' ## Below will be created a set of folders to simulate the structure of the directory where
-#' ## environmental variables are stored for different scenarios
+#' ## Below will be created a set of folders to simulate the structure of the
+#' ## directory where environmental variables are stored for different scenarios
 #' dir_sc <- file.path(tempdir(), "projections")
 #' dir.create(dir_sc)
-#' dir_sc <- file.path(dir_sc, c('scenario_1', 'scenario_2'))
+#' dir_sc <- file.path(dir_sc, c("scenario_1", "scenario_2"))
 #' sapply(dir_sc, dir.create)
 #'
 #' somevar <-
 #'   system.file("external/somevar.tif", package = "flexsdm")
 #' somevar <- terra::rast(somevar)
 #'
-#' terra::writeRaster(somevar, file.path(dir_sc[1], "somevar.tif"), overwrite=TRUE)
-#' terra::writeRaster(somevar, file.path(dir_sc[2], "somevar.tif"), overwrite=TRUE)
+#' terra::writeRaster(somevar, file.path(dir_sc[1], "somevar.tif"), overwrite = TRUE)
+#' terra::writeRaster(somevar, file.path(dir_sc[2], "somevar.tif"), overwrite = TRUE)
 #'
 #' ## Perform pca with projections
 #' dir_w_proj <- dirname(dir_sc[1])
@@ -161,47 +178,108 @@
 #' var$uniqueness
 #' var$loadings
 #'
-#' ##%######################################################%##
+#' ## %######################################################%##
 #' #                                                          #
 #' ####            Other option to perform PCA             ####
 #' ####      considering cell restricted to a region       ####
 #' #                                                          #
-#' ##%######################################################%##
+#' ## %######################################################%##
+#' data("abies")
 #'
 #' # Define a calibration area
 #' abies2 <- abies %>%
 #'   dplyr::select(x, y, pr_ab) %>%
-#'   dplyr::filter(pr_ab==1)
+#'   dplyr::filter(pr_ab == 1)
 #'
 #' plot(somevar[[1]])
 #' points(abies2[-3])
-#' ca <- calib_area(abies2, x = "x", y = "y", method = c("mcp"), crs=crs(somevar))
-#' plot(ca, add=T)
+#' ca <- calib_area(abies2, x = "x", y = "y", method = c("mcp"), crs = crs(somevar))
+#' plot(ca, add = T)
 #'
 #' # Full geographical range to perform PCA
-#' pca_fr <- correct_colinvar(env_layer = somevar ,
-#'                            method = c("pca"),
-#'                            maxcell = NULL,
-#'                            restric_to_region = NULL,
-#'                            restric_pca_proj = FALSE)
+#' pca_fr <- correct_colinvar(
+#'   env_layer = somevar,
+#'   method = c("pca"),
+#'   maxcell = NULL,
+#'   restric_to_region = NULL,
+#'   restric_pca_proj = FALSE
+#' )
 #'
 #' # Perform PCA only with cell delimited by polygon used in restric_to_region
-#' pca_rr <- correct_colinvar(env_layer = somevar ,
-#'                            method = c("pca"),
-#'                            maxcell = NULL,
-#'                            restric_to_region = ca,
-#'                            restric_pca_proj = FALSE)
+#' pca_rr <- correct_colinvar(
+#'   env_layer = somevar,
+#'   method = c("pca"),
+#'   maxcell = NULL,
+#'   restric_to_region = ca,
+#'   restric_pca_proj = FALSE
+#' )
 #'
 #' # Perform and predicted PCA only with cell delimited by polygon used in restric_to_region
-#' pca_rrp <- correct_colinvar(env_layer = somevar ,
-#'                             method = c("pca"),
-#'                             maxcell = NULL,
-#'                             restric_to_region = ca,
-#'                             restric_pca_proj = TRUE)
+#' pca_rrp <- correct_colinvar(
+#'   env_layer = somevar,
+#'   method = c("pca"),
+#'   maxcell = NULL,
+#'   restric_to_region = ca,
+#'   restric_pca_proj = TRUE
+#' )
 #'
 #' plot(pca_fr$env_layer) # PCA with all cells
 #' plot(pca_rr$env_layer) # PCA with calibration area cell but predicted for entire region
 #' plot(pca_rrp$env_layer) # PCA performed and predicted for cells within calibration area (ca)
+#'
+#'
+#'
+#' ##%######################################################%##
+#' #                                                          #
+#' ####       Use correct_colinvar with points data        ####
+#' #                                                          #
+#' ##%######################################################%##
+#' data("abies")
+#'
+#' # Presence-absence database
+#' abies2 <- abies %>%
+#'   dplyr::select(x, y, pr_ab)
+#'
+#' # Perform collinearity control
+#' # Pearson
+#' correct_colinvar(
+#'   env_layer = somevar,
+#'   method = c("pearson", th = "0.6"),
+#'   based_on_points = TRUE,
+#'   data = abies2,
+#'   x = "x",
+#'   y = "y"
+#' )
+#'
+#' # VIF
+#' correct_colinvar(
+#'   env_layer = somevar,
+#'   method = c("vif", th = "8"),
+#'   based_on_points = TRUE,
+#'   data = abies2,
+#'   x = "x",
+#'   y = "y"
+#' )
+#'
+#' # PCA
+#' correct_colinvar(
+#'   env_layer = somevar,
+#'   method = c("pca"),
+#'   based_on_points = TRUE,
+#'   data = abies2,
+#'   x = "x",
+#'   y = "y"
+#' )
+#'
+#' # FA
+#' correct_colinvar(
+#'   env_layer = somevar,
+#'   method = "fa",
+#'   based_on_points = TRUE,
+#'   data = abies2,
+#'   x = "x",
+#'   y = "y"
+#' )
 #'
 #' }
 #'
@@ -211,7 +289,11 @@ correct_colinvar <- function(env_layer,
                              save_proj = NULL,
                              restric_to_region = NULL,
                              restric_pca_proj = FALSE,
-                             maxcell = NULL) {
+                             maxcell = NULL,
+                             based_on_points = FALSE,
+                             data = NULL,
+                             x = NULL,
+                             y = NULL) {
   . <- NULL
   if (!any(c("pearson", "vif", "pca", "fa") %in% method)) {
     stop(
@@ -219,45 +301,68 @@ correct_colinvar <- function(env_layer,
     )
   }
 
+  if (based_on_points) {
+    if (is.null(data) | is.null(x) | is.null(y)) {
+      stop("If based_on_points is TRUE, data, x, and y arguments must be provided")
+    }
+    data <- sdm_extract(
+      data = data,
+      x = x,
+      y = y,
+      env_layer = env_layer,
+      variables = NULL,
+      filter_na = TRUE
+    )
+    data <- data[names(env_layer)]
+  }
+
+
   if (class(env_layer)[1] != "SpatRaster") {
     env_layer <- terra::rast(env_layer)
   }
   if (!is.null(restric_to_region)) {
-    if(any(method %in% c("pca", "fa"))){
+    if (any(method %in% c("pca"))) {
       env_layer_constr <- env_layer %>%
         terra::crop(., restric_to_region) %>%
         terra::mask(., restric_to_region)
     } else {
-      env_layer <- env_layer_constr
+      env_layer <- env_layer %>%
+        terra::crop(., restric_to_region) %>%
+        terra::mask(., restric_to_region)
     }
   }
 
+  #### Pearson ####
   if (any(method %in% "pearson")) {
-
     if (is.na(method["th"])) {
       th <- 0.7
     } else {
       th <- as.numeric(method["th"])
     }
 
-    if(is.null(maxcell)){
+    if(based_on_points){
+      h <- data
+    } else {
+        if (is.null(maxcell)) {
       h <- terra::as.data.frame(env_layer) %>% stats::na.omit()
     } else {
       # Raster random sample
       set.seed(10)
-      h <- terra::as.data.frame(env_layer[[1]], cells=TRUE)[,1] %>%
+      h <- terra::as.data.frame(env_layer[[1]], cells = TRUE)[, 1] %>%
         sample(., size = maxcell, replace = FALSE) %>%
         sort()
       h <- env_layer[h] %>%
         stats::na.omit()
     }
+    }
+
     h <- abs(stats::cor(h, method = "pearson"))
     diag(h) <- 0
 
-    cor_var <- h>th
-    cor_var <- apply(cor_var,2, function(x) colnames(h)[x])
-    if(length(cor_var)==0){
-      cor_var <- 'No pair of variables reached the specified correlation threshold.'
+    cor_var <- h > th
+    cor_var <- apply(cor_var, 2, function(x) colnames(h)[x], simplify = FALSE)
+    if (all(sapply(cor_var, length)==0)) {
+      cor_var <- "No pair of variables reached the specified correlation threshold."
     }
 
     result <- list(
@@ -266,24 +371,28 @@ correct_colinvar <- function(env_layer,
     )
   }
 
+  #### VIF ####
   if (any(method %in% "vif")) {
-
     if (is.null(method["th"])) {
       th <- 10
     } else {
       th <- as.numeric(method["th"])
     }
 
-    if(is.null(maxcell)){
-      x <- terra::as.data.frame(env_layer)
+    if (based_on_points) {
+      x <- data %>% as.data.frame()
     } else {
-      # Raster random sample
-      set.seed(10)
-      x <- terra::as.data.frame(env_layer[[1]], cells=TRUE)[,1] %>%
-        sample(., size = maxcell, replace = FALSE) %>%
-        sort()
-      x <- env_layer[x] %>%
-        stats::na.omit()
+      if (is.null(maxcell)) {
+        x <- terra::as.data.frame(env_layer)
+      } else {
+        # Raster random sample
+        set.seed(10)
+        x <- terra::as.data.frame(env_layer[[1]], cells = TRUE)[, 1] %>%
+          sample(., size = maxcell, replace = FALSE) %>%
+          sort()
+        x <- env_layer[x] %>%
+          stats::na.omit()
+      }
     }
 
     LOOP <- TRUE
@@ -332,45 +441,61 @@ correct_colinvar <- function(env_layer,
     )
   }
 
+  #### PCA ####
   if (any(method %in% "pca")) {
-
     # Restrict cells if required
     if (!is.null(restric_to_region)) {
       env_layer_original <- env_layer
       env_layer <- env_layer_constr
+      rm(env_layer_constr)
     } else {
       env_layer_original <- env_layer
     }
 
-    # mean
-    means <- t(terra::global(env_layer, 'mean', na.rm=T)) %>% c()
-    names(means) <- names(env_layer)
-    # SD
-    stds <- t(terra::global(env_layer, 'sd', na.rm=T)) %>% c()
-    names(stds) <- names(env_layer)
+    if(based_on_points){
+      # mean
+      means <- apply(data, 2, mean, na.rm=TRUE)
+      # SD
+      stds <- apply(data, 2, sd, na.rm=TRUE)
+    } else {
+      # mean
+      means <- t(terra::global(env_layer, "mean", na.rm = T)) %>% c()
+      names(means) <- names(env_layer)
+      # SD
+      stds <- t(terra::global(env_layer, "sd", na.rm = T)) %>% c()
+      names(stds) <- names(env_layer)
+    }
+
 
     # Standardize raster values
     env_layer <- terra::scale(env_layer, center = means, scale = stds)
     vnmes <- names(means)
 
-
-    if(is.null(maxcell)){
-      p0 <- terra::as.data.frame(env_layer, xy = FALSE, na.rm = TRUE)
+    if(based_on_points){
+      # Statandarize data
+      p0 <- data %>%
+        scale(center = means, scale = stds)
+      rm(data)
     } else {
-      # Raster random sample
-      set.seed(10)
-      p0 <- terra::as.data.frame(env_layer[[1]], cells=TRUE)[,1] %>%
-        sample(., size = maxcell, replace = FALSE) %>%
-        sort()
-      p0 <- env_layer[p0] %>%
-        stats::na.omit()
+      if (is.null(maxcell)) {
+        p0 <- terra::as.data.frame(env_layer, xy = FALSE, na.rm = TRUE)
+      } else {
+        # Raster random sample
+        set.seed(10)
+        p0 <- terra::as.data.frame(env_layer[[1]], cells = TRUE)[, 1] %>%
+          sample(., size = maxcell, replace = FALSE) %>%
+          sort()
+        p0 <- env_layer[p0] %>%
+          stats::na.omit()
+      }
     }
 
+
     p <- stats::prcomp(p0,
-                         retx = TRUE,
-                         scale. = FALSE,
-                         center = FALSE
-                       )
+      retx = TRUE,
+      scale. = FALSE,
+      center = FALSE
+    )
     cof <- p$rotation
 
     cvar <- summary(p)$importance["Cumulative Proportion", ]
@@ -381,19 +506,26 @@ correct_colinvar <- function(env_layer,
 
 
     # p <- terra::as.data.frame(env_layer, xy = FALSE, na.rm = TRUE)
-    p <- stats::prcomp(p0, retx = TRUE, scale. = FALSE, center = FALSE, rank. = naxis)
+    p <- stats::prcomp(
+      p0,
+      retx = TRUE,
+      scale. = FALSE,
+      center = FALSE,
+      rank. = naxis
+    )
 
     # env_layer <- terra::predict(env_layer, p)
-    if(restric_pca_proj & is.null(restric_to_region)){
+    if (restric_pca_proj & is.null(restric_to_region)) {
       message("No data was provided to 'restric_to_region' argument, so no geographical restriction will be applied to PCA projections")
-      restric_pca_proj = FALSE
+      restric_pca_proj <- FALSE
     }
-    if(restric_pca_proj){
+    if (restric_pca_proj) {
       env_layer <- terra::predict(env_layer, p)
     } else {
       env_layer_original <- terra::scale(env_layer_original,
-                                         center = means,
-                                         scale = stds)
+        center = means,
+        scale = stds
+      )
       env_layer <- terra::predict(env_layer_original, p)
     }
 
@@ -406,7 +538,7 @@ correct_colinvar <- function(env_layer,
     )
 
     if (!is.null(proj)) {
-      if(is.null(save_proj)){
+      if (is.null(save_proj)) {
         dpca <- file.path(dirname(proj), "Projection_PCA")
         dir.create(dpca)
       } else {
@@ -424,7 +556,7 @@ correct_colinvar <- function(env_layer,
         scen <- terra::rast(list.files(proj[i], full.names = TRUE))
         scen <- scen[[names(means)]]
 
-        if(restric_pca_proj){
+        if (restric_pca_proj) {
           scen <- scen %>%
             terra::crop(., restric_to_region) %>%
             terra::mask(., restric_to_region)
@@ -435,7 +567,7 @@ correct_colinvar <- function(env_layer,
         terra::writeRaster(
           scen,
           file.path(subfold[[i]], "pcs.tif"),
-          overwrite=TRUE
+          overwrite = TRUE
         )
       }
 
@@ -443,25 +575,31 @@ correct_colinvar <- function(env_layer,
     }
   }
 
+  #### FA ####
   if (any(method %in% "fa")) {
-
-    p <- terra::scale(env_layer, center = TRUE, scale = TRUE)
-
-    if(is.null(maxcell)){
-      p <- terra::as.data.frame(p, xy = FALSE, na.rm = TRUE)
+    if(based_on_points){
+      p <- as.data.frame(data) %>%
+        scale(center = TRUE, scale = TRUE)
+      rm(data)
     } else {
-      # Raster random sample
-      set.seed(10)
-      p <- terra::as.data.frame(env_layer[[1]], cells=TRUE)[,1] %>%
-        sample(., size = maxcell, replace = FALSE) %>%
-        sort()
-      p <- env_layer[p] %>%
-        stats::na.omit()
+      p <- terra::scale(env_layer, center = TRUE, scale = TRUE)
+
+      if (is.null(maxcell)) {
+        p <- terra::as.data.frame(p, xy = FALSE, na.rm = TRUE)
+      } else {
+        # Raster random sample
+        set.seed(10)
+        p <- terra::as.data.frame(env_layer[[1]], cells = TRUE)[, 1] %>%
+          sample(., size = maxcell, replace = FALSE) %>%
+          sort()
+        p <- env_layer[p] %>%
+          stats::na.omit()
+      }
     }
 
-    if (nrow(p) > 200000) {
-      p <- p[sample(1:nrow(p), 200000), ]
-    }
+    # if (nrow(p) > 200000) {
+    #   p <- p[sample(1:nrow(p), 200000), ]
+    # }
 
     e <- eigen(stats::cor(p))
     len <- length(e$values)
@@ -475,23 +613,44 @@ correct_colinvar <- function(env_layer,
 
     ns <- length(which(r > a))
 
-    fit <-
+    lwr <- seq(0.001, 3, length.out = 100)
+    fit <- NULL
+    for (tt in 1:length(lwr)) {
       tryCatch(
-        stats::factanal(
+        fit <- stats::factanal(
           x = p,
           factors = ns,
           rotation = "varimax",
-          lower = 0.001
+          lower = lwr[tt]
         ),
         error = function(e) {
-          stats::factanal(
-            x = p,
-            factors = ns - 1,
-            rotation = "varimax",
-            lower = 0.001
-          )
         }
       )
+      if (!is.null(fit)) {
+        break
+      }
+    }
+
+    if(is.null(fit)){
+      message("Factorial analysis could not be performed because ", ns, " factors are too many for ", ncol(p),  " variables")
+      message("It will tested with ", ns-1, " factors")
+      ns <- ns - 1
+      for (tt in 1:length(lwr)) {
+        tryCatch(
+          fit <- stats::factanal(
+            x = p,
+            factors = ns,
+            rotation = "varimax",
+            lower = lwr[tt]
+          ),
+          error = function(e) {
+          }
+        )
+        if (!is.null(fit)) {
+          break
+        }
+      }
+    }
 
     sel <-
       row.names(fit$loadings)[apply(fit$loadings, 2, which.max)]
@@ -500,8 +659,7 @@ correct_colinvar <- function(env_layer,
 
     env_layer <- terra::subset(env_layer, sel)
 
-    h <- fit$loadings %>%
-      matrix() %>%
+    h <- fit$loadings[] %>%
       data.frame()
     colnames(h) <- paste("Factor", 1:ncol(h), sep = "_")
 
