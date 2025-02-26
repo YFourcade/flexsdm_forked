@@ -232,7 +232,7 @@ fit_net <- function(data,
     dplyr::group_by(model, threshold) %>%
     dplyr::summarise(dplyr::across(
       TPR:IMAE,
-      list(mean = mean, sd = stats::sd)
+      list(mean = function(x)mean(x, na.rm = T), sd = sd)
     ), .groups = "drop")
 
   # Bind data for ensemble

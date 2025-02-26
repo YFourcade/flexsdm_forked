@@ -318,7 +318,7 @@ tune_gbm <-
       dplyr::group_by_at(c(hyperp, "model", "threshold")) %>%
       dplyr::summarise(dplyr::across(
         TPR:IMAE,
-        list(mean = mean, sd = sd)
+        list(mean = function(x)mean(x, na.rm = T), sd = sd)
       ), .groups = "drop")
 
     # Find the bets parameter setting
