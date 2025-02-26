@@ -294,7 +294,7 @@ fit_ensemble <-
         dplyr::group_by(threshold) %>%
         dplyr::summarise(dplyr::across(
           TPR:IMAE,
-          list(mean = mean, sd = stats::sd)
+          list(mean = function(x)mean(x, na.rm = T), sd = sd)
         ), .groups = "drop")
 
       ensemble[[g]] <- eval_final
