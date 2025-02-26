@@ -188,7 +188,7 @@ fit_raf <- function(data,
             formula1,
             data = train[[i]],
             mtry = mtry,
-            ntree = 500,
+            ntree = ntree,
             importance = FALSE,
             sampsize = rep(nrow(train[[i]][train[[i]][, response] == 1,]),2)
           )
@@ -245,19 +245,16 @@ fit_raf <- function(data,
 
   # Fit final models with best settings
   set.seed(1)
-  suppressMessages(mod <-
-    randomForest::randomForest(
-      formula1,
-      data = data,
-      mtry = mtry,
-      ntree = 500,
-<<<<<<< HEAD
-      importance = FALSE,
-      sampsize = rep(nrow(data[data[, response] == 1,]),2)
-=======
-      importance = TRUE,
->>>>>>> 688587525e33f58f3b057b6cfc15dc39015ccea3
-    ))
+  suppressMessages(
+    mod <-
+      randomForest::randomForest(
+        formula1,
+        data = data,
+        mtry = mtry,
+        ntree = 500,
+        importance = FALSE,
+        sampsize = rep(nrow(data[data[, response] == 1,]),2)
+      ))
 
   pred_test <- data.frame(
     pr_ab = data.frame(data)[, response],
