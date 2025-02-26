@@ -4,3 +4,5 @@
 .Ruserdata
 .github/
 .DS_Store
+flexsdm.Rproj
+.gitignore
