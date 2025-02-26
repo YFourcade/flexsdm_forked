@@ -231,7 +231,7 @@ tune_raf <-
                 formula1,
                 data = train[[i]],
                 mtry = grid$mtry[ii],
-                sampsize = rep(nrow(train[[i]][train[[i]][, response] == 1,]),2)
+                sampsize = rep(nrow(train[[i]][train[[i]][, response] == 1,]),2),
                 ntree = grid$ntree[ii],
                 importance = FALSE
               )
