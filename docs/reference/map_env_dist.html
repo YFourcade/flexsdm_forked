@@ -74,13 +74,17 @@ Otherwise, as SpatRaster object.</p></dd>
 
 
 <dt id="arg-metric">metric<a class="anchor" aria-label="anchor" href="#arg-metric"></a></dt>
-<dd><p>character. Metric used for measuring distance. Default "domain".</p></dd>
+<dd><p>character. Metric used for measuring distance. Default 'domain'.</p><ul><li><p>domain: Gower distance between presences and projection data. The result is a similarity value that ranges from 0 to 1.</p></li>
+<li><p>euclidean: Euclidean distance. This metric Z-score standardizes the projection data based on the training data and then standardizes the resulting distance by the maximum pairwise distance within the training data. The result is a similarity value that ranges from 0 to 1.</p></li>
+<li><p>mahalanobis: Mahalanobis distance. This metric Z-score standardizes the projection data based on the training data and then standardizes the resulting distance by the maximum pairwise distance within the training data. The result is a similarity value that ranges from 0 to 1.</p></li>
+</ul></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A SpatRaster or tibble object with the nearest environmental distance between presences and projection data.
-So far only the Domain algorithm (based on the Gower distance; Carpenter et al., 1993) has been implemented.</p>
+So far the Domain algorithm (based on the Gower distance; Carpenter et al., 1993), Euclidean distance, and Mahalanobis distance have been implemented.
+For Euclidean and Mahalanobis distances, the result is a similarity value ranging from 0 to 1, where values close to 1 represent high similarity (low distance) and values close to 0 represent low similarity (high distance).</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -117,6 +121,8 @@ So far only the Domain algorithm (based on the Gower distance; Carpenter et al.,
 <span class="r-in"><span><span class="va">sp_pa_2</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Measure environmental distance between presences and projection data</span></span></span>
+<span class="r-in"><span><span class="va">clrs</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#000033"</span>, <span class="st">"#1400FF"</span>, <span class="st">"#C729D6"</span>, <span class="st">"#FF9C63"</span>, <span class="st">"#FFFF60"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Domain</span></span></span>
 <span class="r-in"><span><span class="va">envdist</span> <span class="op">&lt;-</span></span></span>
 <span class="r-in"><span>  <span class="fu">map_env_dist</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    training_data <span class="op">=</span> <span class="va">sp_pa_2</span>,</span></span>
@@ -135,8 +141,52 @@ So far only the Domain algorithm (based on the Gower distance; Carpenter et al.,
 <span class="r-in"><span>  prop_points <span class="op">=</span> <span class="fl">0.8</span>,</span></span>
 <span class="r-in"><span>  alpha_p <span class="op">=</span> <span class="fl">0.9</span>,</span></span>
 <span class="r-in"><span>  color_p <span class="op">=</span> <span class="st">"red"</span>,</span></span>
-<span class="r-in"><span>  color_gradient <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#000033"</span>, <span class="st">"#1400FF"</span>, <span class="st">"#C729D6"</span>, <span class="st">"#FF9C63"</span>, <span class="st">"#FFFF60"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  color_gradient <span class="op">=</span> <span class="va">clrs</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Euclidean</span></span></span>
+<span class="r-in"><span><span class="va">envdist</span> <span class="op">&lt;-</span></span></span>
+<span class="r-in"><span>  <span class="fu">map_env_dist</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    training_data <span class="op">=</span> <span class="va">sp_pa_2</span>,</span></span>
+<span class="r-in"><span>    projection_data <span class="op">=</span> <span class="va">somevar</span>,</span></span>
+<span class="r-in"><span>    metric <span class="op">=</span> <span class="st">"euclidean"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="p_extra.html">p_extra</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  training_data <span class="op">=</span> <span class="va">sp_pa_2</span>,</span></span>
+<span class="r-in"><span>  x <span class="op">=</span> <span class="st">"x"</span>,</span></span>
+<span class="r-in"><span>  y <span class="op">=</span> <span class="st">"y"</span>,</span></span>
+<span class="r-in"><span>  pr_ab <span class="op">=</span> <span class="st">"pr_ab"</span>,</span></span>
+<span class="r-in"><span>  extra_suit_data <span class="op">=</span> <span class="va">envdist</span>,</span></span>
+<span class="r-in"><span>  projection_data <span class="op">=</span> <span class="va">somevar</span>,</span></span>
+<span class="r-in"><span>  geo_space <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  prop_points <span class="op">=</span> <span class="fl">0.8</span>,</span></span>
+<span class="r-in"><span>  alpha_p <span class="op">=</span> <span class="fl">0.9</span>,</span></span>
+<span class="r-in"><span>  color_p <span class="op">=</span> <span class="st">"red"</span>,</span></span>
+<span class="r-in"><span>  color_gradient <span class="op">=</span> <span class="va">clrs</span></span></span>
+<span class="r-in"><span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Euclidean"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Mahalanobis</span></span></span>
+<span class="r-in"><span><span class="va">envdist</span> <span class="op">&lt;-</span></span></span>
+<span class="r-in"><span>  <span class="fu">map_env_dist</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    training_data <span class="op">=</span> <span class="va">sp_pa_2</span>,</span></span>
+<span class="r-in"><span>    projection_data <span class="op">=</span> <span class="va">somevar</span>,</span></span>
+<span class="r-in"><span>    metric <span class="op">=</span> <span class="st">"mahalanobis"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="p_extra.html">p_extra</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  training_data <span class="op">=</span> <span class="va">sp_pa_2</span>,</span></span>
+<span class="r-in"><span>  x <span class="op">=</span> <span class="st">"x"</span>,</span></span>
+<span class="r-in"><span>  y <span class="op">=</span> <span class="st">"y"</span>,</span></span>
+<span class="r-in"><span>  pr_ab <span class="op">=</span> <span class="st">"pr_ab"</span>,</span></span>
+<span class="r-in"><span>  extra_suit_data <span class="op">=</span> <span class="va">envdist</span>,</span></span>
+<span class="r-in"><span>  projection_data <span class="op">=</span> <span class="va">somevar</span>,</span></span>
+<span class="r-in"><span>  geo_space <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  prop_points <span class="op">=</span> <span class="fl">0.8</span>,</span></span>
+<span class="r-in"><span>  alpha_p <span class="op">=</span> <span class="fl">0.9</span>,</span></span>
+<span class="r-in"><span>  color_p <span class="op">=</span> <span class="st">"red"</span>,</span></span>
+<span class="r-in"><span>  color_gradient <span class="op">=</span> <span class="va">clrs</span></span></span>
+<span class="r-in"><span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Mahalanobis"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

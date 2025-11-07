@@ -39,7 +39,7 @@ pre_tr_te <- function(data, p_names, h) {
 }
 
 
-# Inverse bioclim
+# Bioclim
 #'
 #' @noRd
 #'
@@ -93,6 +93,10 @@ bio <- function(data, env_layer) {
   return(result)
 }
 
+#' Inverse bioclim
+#'
+#' @noRd
+#'
 inv_bio <- function(e, p) {
   if (!methods::is(e, "SpatRaster")) {
     e <- terra::rast(e)
@@ -454,4 +458,80 @@ kf <- function(df, n) {
     dplyr::as_tibble()
   result$pr_ab <- 0
   return(result)
+}
+
+#' Standardized Euclidean distance
+#'
+#' @description
+#' This function calculates the Euclidean distance between two datasets after
+#' Z-score standardizing them. The result is then standardized based on the
+#' maximum pairwise distance within the reference dataset (`y`).
+#'
+#' @param x matrix or data.frame of points for which to calculate distances.
+#' @param y matrix or data.frame of reference points.
+#' @return A matrix of standardized Euclidean distances.
+#' @noRd
+#'
+euc_dist_stand <- function(x, y) {
+  # Z-score transformation of x and y based on the mean and sd of y
+  s_center <- colMeans(y, na.rm = TRUE)
+  s_scale <- apply(y, 2, stats::sd, na.rm = TRUE)
+
+  # Standardize y (reference data)
+  y_stand <- y
+  for (i in 1:ncol(y)) {
+    y_stand[i] <- (y[i] - s_center[i]) / s_scale[i]
+  }
+
+  # Standardize x (projection data) using parameters from y
+  x_stand <- x
+  for (i in 1:ncol(x)) {
+    x_stand[i] <- (x[i] - s_center[i]) / s_scale[i]
+  }
+
+  # Calculate raw Euclidean distances between x and y
+  raw_dist <- euc_dist(x_stand, y_stand)
+
+  # Calculate the maximum pairwise Euclidean distance within the reference set y
+  max_dist_y <- max(stats::dist(y_stand))
+
+  # Standardize the distances
+  stand_dist <- raw_dist / max_dist_y
+
+  return(stand_dist)
+}
+
+#' Standardized Mahalanobis distance
+#'
+#' @description
+#' This function calculates the Mahalanobis distance between two datasets after
+#' Z-score standardizing them. The result is then standardized based on the
+#' maximum pairwise distance within the reference dataset (`y`).
+#'
+#' @param x matrix or data.frame of points for which to calculate distances.
+#' @param y matrix or data.frame of reference points.
+#' @return A matrix of standardized Mahalanobis distances.
+#' @noRd
+#'
+mah_dist_stand <- function(x, y) {
+  # Z-score transformation of x and y based on the mean and sd of y
+  s_center <- colMeans(y, na.rm = TRUE)
+  s_scale <- apply(y, 2, stats::sd, na.rm = TRUE)
+
+  # Standardize y (reference data)
+  y_stand <- y
+  for (i in 1:ncol(y)) {
+    y_stand[i] <- (y[i] - s_center[i]) / s_scale[i]
+  }
+
+  # Standardize x (projection data) using parameters from y
+  x_stand <- x
+  for (i in 1:ncol(x)) {
+    x_stand[i] <- (x[i] - s_center[i]) / s_scale[i]
+  }
+
+  # Calculate raw Mahalanobis distances between standardized x and y
+  raw_dist <- mah_dist(x_stand, y_stand, cov = stats::cov(y_stand))
+
+  return(raw_dist)
 }
