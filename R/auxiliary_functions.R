@@ -104,7 +104,7 @@ inv_bio <- function(e, p) {
   r <- bio(data = terra::extract(e, p)[-1], env_layer = e)
   r <- (r - terra::minmax(r)[1]) /
     (terra::minmax(r)[2] - terra::minmax(r)[1])
-  r <- r <= 0.01 # environmental constrain
+  r <- r <= 0.1 # environmental constrain
   r[which(r[, ] == FALSE)] <- NA
   return(r)
 }

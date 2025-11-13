@@ -74,6 +74,20 @@ test_that("sample_pseudoabs", {
   expect_equal(class(ps1)[1], "tbl_df")
   rm(ps1)
 
+  # Pseudo-absences sampled with geo_const_kmeans constraint
+  ps1 <-
+    sample_pseudoabs(
+      data = single_spp,
+      x = "x",
+      y = "y",
+      n = nrow(single_spp) * 10,
+      method = c("geo_const_kmeans", width = "30000", env = somevar),
+      rlayer = regions,
+      maskval = samp_here
+    )
+  expect_equal(class(ps1)[1], "tbl_df")
+  rm(ps1)
+
   # Pseudo-absences sampled with environmental constraint
   ps1 <-
     sample_pseudoabs(
@@ -89,6 +103,21 @@ test_that("sample_pseudoabs", {
   expect_equal(class(ps1)[1], "tbl_df")
   rm(ps1)
 
+  # Pseudo-absences sampled with environmental constraint and k-means
+  ps1 <-
+    sample_pseudoabs(
+      data = single_spp,
+      x = "x",
+      y = "y",
+      n = nrow(single_spp) * 10,
+      method = c("env_const_kmeans", env = somevar),
+      rlayer = crop(regions, terra::ext(regions) - 33000),
+      maskval = samp_here
+    )
+
+  expect_equal(class(ps1)[1], "tbl_df")
+  rm(ps1)
+
   # Pseudo-absences sampled with environmental and geographical constraint
   ps1 <-
     sample_pseudoabs(
@@ -96,7 +125,7 @@ test_that("sample_pseudoabs", {
       x = "x",
       y = "y",
       n = nrow(single_spp) * 10,
-      method = c("geo_env_const", width = "50000", env = somevar),
+      method = c("geoenv_const", width = "50000", env = somevar),
       rlayer = crop(regions, terra::ext(regions) - 33000),
       maskval = samp_here
     )
@@ -111,7 +140,7 @@ test_that("sample_pseudoabs", {
       x = "x",
       y = "y",
       n = nrow(single_spp) * 10,
-      method = c("geo_env_km_const", width = "50000", env = somevar),
+      method = c("geoenv_const_kmeans", width = "50000", env = somevar),
       rlayer = crop(regions, terra::ext(regions) - 33000),
       maskval = samp_here
     )
@@ -208,17 +237,17 @@ test_that("function misuse", {
     x = "x",
     y = "y",
     n = nrow(single_spp) * 10,
-    method = "geo_env_const",
+    method = "genv_const",
     rlayer = regions,
     maskval = NULL
-  ))
+  ))  
 
   expect_error(sample_pseudoabs(
     data = single_spp,
     x = "x",
     y = "y",
     n = nrow(single_spp) * 10,
-    method = "geo_env_km_const",
+    method = "asdf_const_kmeans",
     rlayer = regions,
     maskval = NULL
   ))
