@@ -209,7 +209,10 @@ fit_raf <- function(data,
               data = train[[i]],
               mtry = mtry,
               ntree = ntree,
-              sampsize = rep(nrow(train[[i]][train[[i]][, response] == 1,]),2),
+              sampsize = rep(
+                min(nrow(train[[i]][train[[i]][, response] == 1,]),
+                nrow(train[[i]][train[[i]][, response] == 0,])),
+                2),
               importance = FALSE,
             )
 
@@ -251,7 +254,7 @@ fit_raf <- function(data,
       dplyr::group_by(model, threshold) %>%
       dplyr::summarise(dplyr::across(
         TPR:IMAE,
-        list(mean = mean, sd = stats::sd)
+        list(mean = function(x) mean(x, na.rm = T), sd = function(x) stats::sd(x, na.rm = T))
       ), .groups = "drop")
 
     # Bind data for ensemble
@@ -271,7 +274,10 @@ fit_raf <- function(data,
         data = data,
         mtry = mtry,
         ntree = ntree,
-        sampsize = rep(nrow(data[data[, response] == 1,]),2),
+        sampsize = rep(
+          min(nrow(data[data[, response] == 1,]),
+              nrow(data[data[, response] == 0,])),
+          2),
         importance = TRUE,
       ))
 
